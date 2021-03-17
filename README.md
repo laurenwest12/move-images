@@ -1,4 +1,4 @@
-# Copy Images Into New Folder
+# Move Images
 
 ### Description
 
