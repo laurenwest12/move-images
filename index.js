@@ -1,41 +1,44 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
-const csv = require('csvtojson');
+const sql = require('msnodesqlv8');
 
-const { csvFilePath, destinationFolder } = require('./config');
+const { destinationFolder } = require('./config');
+const { server, database, driver } = require('./config');
 
-const getJson = () =>
-	csv()
-		.fromFile(csvFilePath)
-		.then((json) => {
-			return json;
-		});
+const connectionString = `server=${server};Database=${database};Trusted_Connection=Yes;Driver=${driver}`;
 
-const moveAllFiles = (arr) => {
-	const errors = [];
-	for (let file of arr) {
-		const { FilePath, FileName } = file;
-		const destinationPath = `${destinationFolder}/${FileName}`;
+const moveAllFiles = async () => {
+	await sql.query(
+		connectionString,
+		'SELECT * FROM LabelPackImagesRL',
+		(err, rows) => {
+			for (let row of rows) {
+				const { tempcode, FileName } = row;
+				const fileArr = FileName.split('\\');
+				const file = fileArr[fileArr.length - 1];
 
-		try {
-			if (fs.existsSync(destinationPath)) {
-				continue;
-			} else {
-				fs.copyFileSync(FilePath, destinationPath);
+				const destinationPath = `${destinationFolder}/RALPH LAUREN/${file}`;
+				console.log(file);
+				try {
+					if (!fs.existsSync(`${destinationFolder}/RALPH LAUREN`)) {
+						fs.mkdirSync(`${destinationFolder}/RALPH LAUREN`);
+					}
+					if (fs.existsSync(destinationPath)) {
+						continue;
+					} else {
+						fs.copyFileSync(FileName, destinationPath);
+					}
+				} catch (err) {
+					console.log(err);
+				}
 			}
-		} catch (err) {
-			errors.push(FileName);
 		}
-	}
-
-	return errors;
+	);
 };
 
 app.listen(5050, async () => {
 	console.log('Server is running...');
-	const styles = await getJson();
-	const errors = moveAllFiles(styles);
-	console.log(errors);
+	await moveAllFiles();
 	console.log('Done moving files');
 });
