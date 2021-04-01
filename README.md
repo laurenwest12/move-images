@@ -2,4 +2,4 @@
 
 ### Description
 
-NodeJS application that finds a CSV from a provided path, finds the filepaths within the CSV, and moves these files to a provided destination folder.
+NodeJS application that retrieves a table from SQL Server that contains image paths and moves the image paths to a specified destination folder.
